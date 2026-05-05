@@ -1,0 +1,10 @@
+services:
+  - type: static
+    name: creative-ai-hub
+    staticPublishPath: .
+    buildCommand: ""
+    pullRequestPreviewsEnabled: false
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=3600
