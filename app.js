@@ -2441,7 +2441,7 @@ async function beginAssessmentPhase(phaseNum) {
             try {
                 const formData = new FormData();
                 formData.append('audio', blob, 'recording.webm');
-                const res = await fetch('https://research-project-8jdj.onrender.com/analyze', {
+                const res = await fetch('/analyze', {
                     method: 'POST',
                     body: formData,
                     signal: AbortSignal.timeout(8000)

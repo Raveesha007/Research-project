@@ -2,13 +2,12 @@ import io
 import os
 import numpy as np
 import librosa
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
-app = Flask(__name__)
-CORS(app, origins=["http://localhost:*", "http://127.0.0.1:*", "null",
-                   "https://music-studio-pro-56678.web.app",
-                   "https://research-project-8jdj.onrender.com"])
+STATIC_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__, static_folder=STATIC_DIR, static_url_path='')
+CORS(app)
 
 # ── Keras model disabled — using pyin only ──────────────────────────────────────────
 # MODEL_PATH = os.path.join(os.path.dirname(__file__), 'ml', 'outputs', 'piano_detector_final.keras')
@@ -128,6 +127,13 @@ def predict_with_pyin(y, sr):
     return sorted(seen.values(), key=lambda x: x["confidence"], reverse=True)[:5]
 
 # ── Routes ────────────────────────────────────────────────────────────────────
+@app.route('/')
+@app.route('/<path:path>')
+def serve_static(path='index.html'):
+    if path != '' and os.path.exists(os.path.join(STATIC_DIR, path)):
+        return send_from_directory(STATIC_DIR, path)
+    return send_from_directory(STATIC_DIR, 'index.html')
+
 @app.route("/health")
 def health():
     return jsonify({"status": "ok", "model": "keras" if keras_model else "pyin"})
