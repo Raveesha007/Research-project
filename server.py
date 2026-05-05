@@ -127,13 +127,6 @@ def predict_with_pyin(y, sr):
     return sorted(seen.values(), key=lambda x: x["confidence"], reverse=True)[:5]
 
 # ── Routes ────────────────────────────────────────────────────────────────────
-@app.route('/')
-@app.route('/<path:path>')
-def serve_static(path='index.html'):
-    if path != '' and os.path.exists(os.path.join(STATIC_DIR, path)):
-        return send_from_directory(STATIC_DIR, path)
-    return send_from_directory(STATIC_DIR, 'index.html')
-
 @app.route("/health")
 def health():
     return jsonify({"status": "ok", "model": "keras" if keras_model else "pyin"})
@@ -174,6 +167,15 @@ def analyze():
 
     print(f"[analyze] returning {len(notes)} notes: {[n['note'] for n in notes]}")
     return jsonify({"notes": notes})
+
+# ── Serve frontend static files ───────────────────────────────────────────────
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_static(path):
+    target = os.path.join(STATIC_DIR, path) if path else None
+    if path and os.path.isfile(target):
+        return send_from_directory(STATIC_DIR, path)
+    return send_from_directory(STATIC_DIR, 'index.html')
 
 if __name__ == "__main__":
     model_type = "Keras CNN+LSTM" if keras_model else "pyin fallback"
