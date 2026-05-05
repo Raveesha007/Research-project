@@ -682,13 +682,13 @@ class AudioAnalysisEngine {
             const res = await fetch('https://research-project-8jdj.onrender.com/analyze', {
                 method: 'POST',
                 body: formData,
-                signal: AbortSignal.timeout(15000)
+                signal: AbortSignal.timeout(45000)
             });
             if (res.ok) {
                 const data = await res.json();
                 // Map backend note format ("C_4") to app.js format ({name, octave, full})
                 const nameMap = { Cs: 'C#', Eb: 'D#', Fs: 'F#', Gs: 'G#', Bb: 'A#' };
-                this.detectedNotes = (data.notes || []).map(item => {
+                const mapped = (data.notes || []).map(item => {
                     const parts = item.note.split('_');
                     const rawName = parts[0];
                     const octave = parseInt(parts[1], 10);
@@ -700,9 +700,16 @@ class AudioAnalysisEngine {
                         timestamp: 0
                     };
                 });
-                this.generateAnalysis();
-                if (this._onAnalysisDone) this._onAnalysisDone([...this.detectedNotes]);
-                backendSuccess = true;
+                if (mapped.length > 0) {
+                    this.detectedNotes = mapped;
+                    this.generateAnalysis();
+                    if (this._onAnalysisDone) this._onAnalysisDone([...this.detectedNotes]);
+                    backendSuccess = true;
+                } else {
+                    console.warn('Backend returned 0 notes — using local fallback');
+                }
+            } else {
+                console.warn('Backend returned status', res.status, '— using local fallback');
             }
         } catch (e) {
             console.warn('Backend unavailable, falling back to autocorrelation:', e.message);
@@ -766,8 +773,8 @@ class AudioAnalysisEngine {
         const windowSize = 4096;
         const hopSize = 4096; // Non-overlapping windows to reduce over-detection
         const totalSamples = buffer.length;
-        const MIN_CONFIDENCE = 75; // Threshold to reject noise
-        const MIN_HOLD_WINDOWS = 3; // A note must persist for at least 3 consecutive windows
+        const MIN_CONFIDENCE = 55; // Lowered from 75 — piano mic recordings are often quieter
+        const MIN_HOLD_WINDOWS = 2; // Lowered from 3 — allow notes held for ~185ms (2×4096/44100)
 
         // Phase 1: Detect raw notes per window
         const rawDetections = [];
