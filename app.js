@@ -685,7 +685,7 @@ class AudioAnalysisEngine {
             const timeoutId = setTimeout(() => controller.abort(), 45000);
 
             console.log('[audio] Sending', wavBlob.size, 'bytes to /analyze …');
-            const res = await fetch('https://research-project-8jdj.onrender.com/analyze', {
+            const res = await fetch('/analyze', {
                 method: 'POST',
                 body: formData,
                 signal: controller.signal
