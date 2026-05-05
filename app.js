@@ -677,27 +677,22 @@ class AudioAnalysisEngine {
         // Try backend first; fall back to local autocorrelation
         let backendSuccess = false;
         try {
-            // Wake up Render if it's sleeping (free tier spins down after inactivity)
-            try {
-                console.log('[audio] Pinging /health to wake server…');
-                await fetch('/health', { signal: AbortSignal.timeout ? AbortSignal.timeout(60000) : undefined });
-                console.log('[audio] Server awake');
-            } catch (_) { /* ignore — proceed to audio send anyway */ }
+            // Wake up Render if sleeping (free tier), then send audio
+            // Use Promise.race for timeout — avoids AbortController browser bugs
+            const fetchWithTimeout = (url, opts, ms) => Promise.race([
+                fetch(url, opts),
+                new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))
+            ]);
+
+            console.log('[audio] Pinging /health to wake server…');
+            await fetchWithTimeout('/health', {}, 60000).catch(() => {});
+            console.log('[audio] Server awake, sending audio…');
 
             const formData = new FormData();
             formData.append('audio', wavBlob, 'recording.wav');
 
-            // Use AbortController for broad browser compatibility
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort('timeout'), 90000);
-
             console.log('[audio] Sending', wavBlob.size, 'bytes to /analyze …');
-            const res = await fetch('/analyze', {
-                method: 'POST',
-                body: formData,
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
+            const res = await fetchWithTimeout('/analyze', { method: 'POST', body: formData }, 90000);
             console.log('[audio] /analyze responded:', res.status);
 
             if (res.ok) {
@@ -791,8 +786,8 @@ class AudioAnalysisEngine {
         const windowSize = 4096;
         const hopSize = 4096; // Non-overlapping windows to reduce over-detection
         const totalSamples = buffer.length;
-        const MIN_CONFIDENCE = 55; // Lowered from 75 — piano mic recordings are often quieter
-        const MIN_HOLD_WINDOWS = 2; // Lowered from 3 — allow notes held for ~185ms (2×4096/44100)
+        const MIN_CONFIDENCE = 25; // normalised autocorrelation × 100; 25 = r > 0.25
+        const MIN_HOLD_WINDOWS = 1; // note must appear in at least 1 window (~186 ms)
 
         // Phase 1: Detect raw notes per window
         const rawDetections = [];
@@ -865,55 +860,37 @@ class AudioAnalysisEngine {
 
     getAutocorrelation(buffer, sampleRate) {
         const SIZE = buffer.length;
-        const MAX_SAMPLES = Math.floor(sampleRate / 50);
+        // Piano range: ~27 Hz (A0) to ~4186 Hz (C8)
+        const minOffset = Math.floor(sampleRate / 4200);
+        const maxOffset = Math.min(Math.floor(sampleRate / 27), Math.floor(SIZE / 2));
+
+        // RMS — used for normalisation
+        let rms = 0;
+        for (let i = 0; i < SIZE; i++) rms += buffer[i] * buffer[i];
+        rms = Math.sqrt(rms / SIZE);
+        if (rms < 0.0005) return null; // true silence only
+
+        // Normalised autocorrelation r(τ) = Σ x(t)·x(t+τ) / (N · rms²)
+        // Returns values in [-1, 1] independent of signal amplitude
         let best_offset = -1;
         let best_correlation = 0;
-        let rms = 0;
 
-        // Calculate RMS
-        for (let i = 0; i < SIZE; i++) {
-            const val = buffer[i];
-            rms += val * val;
-        }
-        rms = Math.sqrt(rms / SIZE);
+        for (let offset = minOffset; offset < maxOffset; offset++) {
+            let corr = 0;
+            const n = SIZE - offset;
+            for (let i = 0; i < n; i++) corr += buffer[i] * buffer[i + offset];
+            corr /= (n * rms * rms); // normalise by power
 
-        if (rms < 0.01) return null; // only reject true silence
-
-        // Find best correlation
-        let lastCorrelation = 1;
-        for (let offset = 0; offset < MAX_SAMPLES; offset++) {
-            let correlation = 0;
-            for (let i = 0; i < MAX_SAMPLES; i++) {
-                correlation += Math.abs(buffer[i] - buffer[i + offset]);
+            if (corr > best_correlation) {
+                best_correlation = corr;
+                best_offset = offset;
             }
-            correlation = 1 - (correlation / MAX_SAMPLES);
-            
-            if (correlation > 0.5 && correlation > lastCorrelation) {
-                let foundGoodCorrelation = false;
-                if (correlation > best_correlation) {
-                    best_correlation = correlation;
-                    best_offset = offset;
-                    foundGoodCorrelation = true;
-                }
-                if (foundGoodCorrelation) {
-                    const shift = this.parabolicInterpolation(buffer, best_offset, sampleRate);
-                    if (shift) {
-                        return {
-                            frequency: shift,
-                            confidence: best_correlation * 100
-                        };
-                    }
-                }
-            }
-            lastCorrelation = correlation;
         }
 
-        if (best_correlation > 0.01) {
-            const frequency = sampleRate / best_offset;
-            return {
-                frequency: frequency,
-                confidence: best_correlation * 100
-            };
+        if (best_offset > 0 && best_correlation > 0.25) {
+            const shift = this.parabolicInterpolation(buffer, best_offset, sampleRate);
+            const frequency = shift || (sampleRate / best_offset);
+            return { frequency, confidence: best_correlation * 100 };
         }
         return null;
     }
