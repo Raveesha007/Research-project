@@ -124,7 +124,28 @@ def predict_with_pyin(y, sr):
     # Keep all unique notes (do NOT deduplicate repeated plays of same note)
     return sorted(consolidated, key=lambda x: x["confidence"], reverse=True)[:10]
 
-# ── Routes ────────────────────────────────────────────────────────────────────
+def _load_audio(audio_bytes, sr):
+    """Load audio bytes → numpy array. Falls back through pydub if librosa can't decode."""
+    buf = io.BytesIO(audio_bytes)
+    try:
+        y, loaded_sr = librosa.load(buf, sr=sr, mono=True)
+        if len(y) > 0:
+            return y, loaded_sr
+    except Exception as e:
+        print(f"[load] librosa failed ({e}), trying pydub…")
+
+    # pydub fallback — handles WebM/Opus natively when ffmpeg is present
+    try:
+        from pydub import AudioSegment
+        buf.seek(0)
+        seg = AudioSegment.from_file(buf).set_channels(1).set_frame_rate(sr)
+        samples = np.array(seg.get_array_of_samples(), dtype=np.float32) / (2 ** 15)
+        print(f"[load] pydub decoded {len(samples)} samples at {sr}Hz")
+        return samples, sr
+    except Exception as e2:
+        raise RuntimeError(f"All decoders failed. librosa: see above; pydub: {e2}")
+
+
 @app.route("/health")
 def health():
     return jsonify({"status": "ok", "model": "keras" if keras_model else "pyin"})
@@ -136,9 +157,11 @@ def analyze():
 
     try:
         audio_bytes = request.files["audio"].read()
-        target_sr   = SR if keras_model else 22050
-        y, sr = librosa.load(io.BytesIO(audio_bytes), sr=target_sr, mono=True)
+        print(f"[analyze] received {len(audio_bytes)} bytes")
+        target_sr = SR if keras_model else 22050
+        y, sr = _load_audio(audio_bytes, target_sr)
     except Exception as e:
+        print(f"[analyze] decode error: {e}")
         return jsonify({"error": f"Failed to decode audio: {str(e)}"}), 422
 
     if len(y) < sr * 0.1:
@@ -150,14 +173,14 @@ def analyze():
             # If Keras found nothing, fall back to pyin so the user isn't left empty
             if not notes:
                 print("Keras returned no notes — falling back to pyin")
-                y_pyin, sr_pyin = librosa.load(io.BytesIO(audio_bytes), sr=22050, mono=True)
+                y_pyin, sr_pyin = _load_audio(audio_bytes, 22050)
                 notes = predict_with_pyin(y_pyin, 22050)
         else:
             notes = predict_with_pyin(y, sr)
     except Exception as e:
         print(f"Prediction error: {e}")
         try:
-            y_pyin, sr_pyin = librosa.load(io.BytesIO(audio_bytes), sr=22050, mono=True)
+            y_pyin, sr_pyin = _load_audio(audio_bytes, 22050)
             notes = predict_with_pyin(y_pyin, 22050)
         except Exception as e2:
             print(f"pyin fallback also failed: {e2}")
