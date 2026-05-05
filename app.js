@@ -674,58 +674,63 @@ class AudioAnalysisEngine {
             console.warn('[audio] WAV re-encode failed, sending raw blob:', decErr.message);
         }
 
-        // Try backend (with one retry for Render cold-start wake-up)
+        // Try backend first; fall back to local autocorrelation
         let backendSuccess = false;
-        const tryBackend = async () => {
+        try {
+            // Wake up Render if it's sleeping (free tier spins down after inactivity)
+            try {
+                console.log('[audio] Pinging /health to wake server…');
+                await fetch('/health', { signal: AbortSignal.timeout ? AbortSignal.timeout(60000) : undefined });
+                console.log('[audio] Server awake');
+            } catch (_) { /* ignore — proceed to audio send anyway */ }
+
             const formData = new FormData();
             formData.append('audio', wavBlob, 'recording.wav');
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 90000);
-            try {
-                console.log('[audio] Sending', wavBlob.size, 'bytes to /analyze …');
-                const res = await fetch('/analyze', {
-                    method: 'POST',
-                    body: formData,
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                console.log('[audio] /analyze responded:', res.status);
-                if (res.ok) {
-                    const data = await res.json();
-                    console.log('[audio] backend notes:', data.notes);
-                    const nameMap = { Cs: 'C#', Eb: 'D#', Fs: 'F#', Gs: 'G#', Bb: 'A#' };
-                    const mapped = (data.notes || []).map(item => {
-                        const parts = item.note.split('_');
-                        const rawName = parts[0];
-                        const octave = parseInt(parts[1], 10);
-                        const name = nameMap[rawName] || rawName;
-                        return {
-                            frequency: item.frequency,
-                            confidence: item.confidence,
-                            note: { name, octave, full: name + octave },
-                            timestamp: 0
-                        };
-                    });
-                    if (mapped.length > 0) {
-                        this.detectedNotes = mapped;
-                        this.generateAnalysis();
-                        if (this._onAnalysisDone) this._onAnalysisDone([...this.detectedNotes]);
-                        return true;
-                    }
-                }
-            } catch (e) {
-                clearTimeout(timeoutId);
-                console.warn('[audio] Fetch attempt failed:', e.message || e);
-            }
-            return false;
-        };
 
-        backendSuccess = await tryBackend();
-        if (!backendSuccess) {
-            // Render free tier may be waking up — wait 4s and retry once
-            console.log('[audio] Retrying backend in 4s (cold-start wake-up)…');
-            await new Promise(r => setTimeout(r, 4000));
-            backendSuccess = await tryBackend();
+            // Use AbortController for broad browser compatibility
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort('timeout'), 90000);
+
+            console.log('[audio] Sending', wavBlob.size, 'bytes to /analyze …');
+            const res = await fetch('/analyze', {
+                method: 'POST',
+                body: formData,
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            console.log('[audio] /analyze responded:', res.status);
+
+            if (res.ok) {
+                const data = await res.json();
+                console.log('[audio] backend notes:', data.notes);
+                // Map backend note format ("C_4") to app.js format ({name, octave, full})
+                const nameMap = { Cs: 'C#', Eb: 'D#', Fs: 'F#', Gs: 'G#', Bb: 'A#' };
+                const mapped = (data.notes || []).map(item => {
+                    const parts = item.note.split('_');
+                    const rawName = parts[0];
+                    const octave = parseInt(parts[1], 10);
+                    const name = nameMap[rawName] || rawName;
+                    return {
+                        frequency: item.frequency,
+                        confidence: item.confidence,
+                        note: { name, octave, full: name + octave },
+                        timestamp: 0
+                    };
+                });
+                if (mapped.length > 0) {
+                    this.detectedNotes = mapped;
+                    this.generateAnalysis();
+                    if (this._onAnalysisDone) this._onAnalysisDone([...this.detectedNotes]);
+                    backendSuccess = true;
+                } else {
+                    console.warn('[audio] Backend returned 0 notes — using local fallback');
+                }
+            } else {
+                const errText = await res.text().catch(() => '');
+                console.warn('[audio] Backend error', res.status, errText);
+            }
+        } catch (e) {
+            console.warn('[audio] Fetch failed:', e.message, '(reason:', e.name, ') — using local fallback');
         }
 
         if (!backendSuccess) {
@@ -786,8 +791,8 @@ class AudioAnalysisEngine {
         const windowSize = 4096;
         const hopSize = 4096; // Non-overlapping windows to reduce over-detection
         const totalSamples = buffer.length;
-        const MIN_CONFIDENCE = 30; // Low threshold — piano mic recordings vary widely
-        const MIN_HOLD_WINDOWS = 1; // Allow single-window notes (~185ms)
+        const MIN_CONFIDENCE = 55; // Lowered from 75 — piano mic recordings are often quieter
+        const MIN_HOLD_WINDOWS = 2; // Lowered from 3 — allow notes held for ~185ms (2×4096/44100)
 
         // Phase 1: Detect raw notes per window
         const rawDetections = [];
@@ -872,7 +877,7 @@ class AudioAnalysisEngine {
         }
         rms = Math.sqrt(rms / SIZE);
 
-        if (rms < 0.12) return null;
+        if (rms < 0.01) return null; // only reject true silence
 
         // Find best correlation
         let lastCorrelation = 1;
@@ -883,7 +888,7 @@ class AudioAnalysisEngine {
             }
             correlation = 1 - (correlation / MAX_SAMPLES);
             
-            if (correlation > 0.9 && correlation > lastCorrelation) {
+            if (correlation > 0.5 && correlation > lastCorrelation) {
                 let foundGoodCorrelation = false;
                 if (correlation > best_correlation) {
                     best_correlation = correlation;
