@@ -87,17 +87,21 @@ def hz_to_note(freq):
 
 def predict_with_pyin(y, sr):
     print(f"[pyin] audio length={len(y)/sr:.2f}s  sr={sr}  peak={float(np.max(np.abs(y))):.4f}")
+    # Normalise quiet recordings so pyin has a chance
+    peak = float(np.max(np.abs(y)))
+    if 0 < peak < 0.1:
+        y = y / peak * 0.5
     f0, voiced_flag, voiced_prob = librosa.pyin(
         y, sr=sr,
         fmin=librosa.note_to_hz("A0"),
         fmax=librosa.note_to_hz("C8"),
-        frame_length=2048, hop_length=512
+        frame_length=2048, hop_length=256
     )
     voiced_count = int(np.sum(voiced_flag))
     print(f"[pyin] voiced frames={voiced_count}/{len(voiced_flag)}")
     raw = []
     for freq, voiced, prob in zip(f0, voiced_flag, voiced_prob):
-        if not voiced or prob < 0.35:
+        if not voiced or prob < 0.2:
             continue
         info = hz_to_note(freq)
         if info:
@@ -105,6 +109,7 @@ def predict_with_pyin(y, sr):
             raw.append(info)
     print(f"[pyin] raw notes after threshold: {[r['note'] for r in raw[:10]]}")
 
+    # Consolidate runs of the same note (min 1 frame — allow short notes)
     consolidated = []
     if raw:
         run_note, run = raw[0]["note"], [raw[0]]
@@ -112,19 +117,12 @@ def predict_with_pyin(y, sr):
             if item["note"] == run_note:
                 run.append(item)
             else:
-                if len(run) >= 2:
-                    consolidated.append(max(run, key=lambda x: x["confidence"]))
+                consolidated.append(max(run, key=lambda x: x["confidence"]))
                 run_note, run = item["note"], [item]
-        if len(run) >= 2:
-            consolidated.append(max(run, key=lambda x: x["confidence"]))
+        consolidated.append(max(run, key=lambda x: x["confidence"]))
 
-    seen = {}
-    for item in consolidated:
-        n = item["note"]
-        if n not in seen or item["confidence"] > seen[n]["confidence"]:
-            seen[n] = item
-
-    return sorted(seen.values(), key=lambda x: x["confidence"], reverse=True)[:5]
+    # Keep all unique notes (do NOT deduplicate repeated plays of same note)
+    return sorted(consolidated, key=lambda x: x["confidence"], reverse=True)[:10]
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 @app.route("/health")
