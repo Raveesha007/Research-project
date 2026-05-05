@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Learn Piano & Guitar with AI-Powered Audio Analysis and Real-Time Feedback">
+    <meta name="theme-color" content="#6366f1">
+    <title>Music Studio Pro - Learn Piano & Guitar with AI</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>🎵</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-light: #f9fafb;
+            --bg-white: #ffffff;
+            --border: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            color: var(--text-primary);
+            background: var(--bg-light);
+            line-height: 1.6;
+        }
+
+        /* HEADER & NAVIGATION */
+        header {
+            background: var(--bg-white);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--primary);
+        }
+
+        .logo-text {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        nav ul {
+            display: flex;
+            gap: 40px;
+            list-style: none;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: var(--transition);
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* HERO SECTION */
+        .hero {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 100px 20px;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto 60px;
+        }
+
+        h1 {
+            font-size: 56px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            line-height: 1.2;
+            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            line-height: 1.8;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 60px;
+            flex-wrap: wrap;
+        }
+
+        .btn-secondary {
+            background: var(--bg-white);
+            color: var(--primary);
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid var(--primary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* FEATURES SECTION */
+        .features-section {
+            background: var(--bg-white);
+            padding: 100px 20px;
+            margin: 60px 0;
+        }
+
+        .section-title {
+            font-size: 40px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 60px;
+            color: var(--text-primary);
+        }
+
+        .features-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(236, 72, 153, 0.05));
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .feature-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        /* INSTRUMENTS SECTION */
+        .instruments-section {
+            max-width: 1400px;
+            margin: 100px auto;
+            padding: 0 20px;
+        }
+
+        .instruments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .instrument-showcase {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1));
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 40px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .instrument-showcase::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+            transform: rotate(0deg);
+            transition: var(--transition);
+        }
+
+        .instrument-showcase:hover {
+            border-color: var(--primary);
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .instrument-showcase:hover::before {
+            transform: rotate(45deg);
+        }
+
+        .instrument-emoji {
+            font-size: 80px;
+            margin-bottom: 20px;
+            display: block;
+            transition: var(--transition);
+        }
+
+        .instrument-showcase:hover .instrument-emoji {
+            transform: scale(1.2);
+        }
+
+        .instrument-showcase h3 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .instrument-showcase p {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        /* STATS SECTION */
+        .stats-section {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 80px 20px;
+            margin: 100px 0;
+        }
+
+        .stats-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            text-align: center;
+        }
+
+        .stat {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        /* PRICING SECTION */
+        .pricing-section {
+            max-width: 1400px;
+            margin: 100px auto;
+            padding: 0 20px;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .pricing-card {
+            background: var(--bg-white);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .pricing-card.featured {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-xl);
+            transform: scale(1.05);
+        }
+
+        .pricing-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .price {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+
+        .price small {
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        .features-list {
+            list-style: none;
+            text-align: left;
+            margin: 30px 0;
+        }
+
+        .features-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .features-list li::before {
+            content: '✓';
+            color: var(--success);
+            font-weight: 700;
+            margin-right: 10px;
+        }
+
+        /* FOOTER */
+        footer {
+            background: var(--bg-white);
+            border-top: 1px solid var(--border);
+            padding: 60px 20px 20px;
+            margin-top: 100px;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-section h4 {
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .footer-section a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid var(--border);
+            padding-top: 30px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 36px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            nav ul {
+                display: none;
+            }
+
+            nav {
+                height: 60px;
+            }
+
+            .pricing-card.featured {
+                transform: scale(1);
+            }
+        }
+
+        /* ANIMATIONS */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25%       { transform: translateX(-5px); }
+            75%       { transform: translateX(5px); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* ── DARK MODE TOGGLE BUTTON ── */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f3f4f6;
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            padding: 7px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            white-space: nowrap;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: #ede9fe;
+        }
+
+        /* The sky window that clips the rising/setting icons */
+        .theme-toggle-sky {
+            position: relative;
+            width: 22px;
+            height: 22px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle-sky .icon {
+            position: absolute;
+            left: 0;
+            font-size: 18px;
+            line-height: 22px;
+            width: 22px;
+            text-align: center;
+            transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                        opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Sun starts visible (bottom = "horizon position" = 0) */
+        .theme-toggle-sky .sun  { transform: translateY(0);    opacity: 1; }
+        .theme-toggle-sky .moon { transform: translateY(100%); opacity: 0; }
+
+        /* When dark mode is active: sun sets, moon rises */
+        body.dark-mode .theme-toggle-sky .sun  { transform: translateY(100%); opacity: 0; }
+        body.dark-mode .theme-toggle-sky .moon { transform: translateY(0);    opacity: 1; }
+
+        /* nav wrapper for right-side controls */
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* ── DARK MODE THEME ── */
+        body.dark-mode {
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --bg-light: #111827;
+            --bg-white: #1f2937;
+            --border: #374151;
+            --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.4);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.5);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.5);
+            color: var(--text-primary);
+            background: var(--bg-light);
+        }
+
+        body.dark-mode header {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+        }
+
+        body.dark-mode .logo-text {
+            background: linear-gradient(135deg, #818cf8, #ec4899);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        body.dark-mode nav a { color: var(--text-secondary); }
+        body.dark-mode nav a:hover { color: #a5b4fc; }
+
+        body.dark-mode .theme-toggle {
+            background: #374151;
+            border-color: #4b5563;
+            color: #d1d5db;
+        }
+        body.dark-mode .theme-toggle:hover {
+            border-color: #818cf8;
+            color: #a5b4fc;
+            background: #312e81;
+        }
+
+        body.dark-mode .hero-badge,
+        body.dark-mode .badge { background: #312e81; color: #a5b4fc; }
+
+        body.dark-mode .feature-card,
+        body.dark-mode .instrument-card,
+        body.dark-mode .pricing-card,
+        body.dark-mode .stat-item {
+            background: var(--bg-white);
+            border-color: var(--border);
+        }
+
+        body.dark-mode .pricing-card.featured {
+            background: linear-gradient(135deg, #312e81, #1e1b4b);
+            border-color: #6366f1;
+        }
+
+        body.dark-mode .feature-icon { background: #1f2937; }
+
+        body.dark-mode footer {
+            background: #0f172a;
+            border-top: 1px solid var(--border);
+        }
+
+        body.dark-mode .footer-bottom {
+            border-top-color: #1e293b;
+            color: var(--text-secondary);
+        }
+
+        body.dark-mode p,
+        body.dark-mode li { color: var(--text-secondary); }
+
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode h4 { color: var(--text-primary); }
+
+        body.dark-mode .hero p { color: #9ca3af; }
+
+        body.dark-mode .stats-section { background: #0f172a; }
+
+        body.dark-mode .cta-section {
+            background: linear-gradient(135deg, #312e81 0%, #1e1b4b 50%, #164e63 100%);
+        }
+
+        /* ── SUBSCRIPTION MODAL ── */
+        .sub-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+        .sub-modal-overlay.open {
+            display: flex;
+        }
+        .sub-modal {
+            background: var(--bg-white);
+            border-radius: 20px;
+            max-width: 820px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+            display: flex;
+            flex-direction: column;
+        }
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0)  scale(1); }
+        }
+        .sub-modal-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 32px 36px 28px;
+            border-radius: 20px 20px 0 0;
+            color: #fff;
+            position: relative;
+        }
+        .sub-modal-header h2 {
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+        }
+        .sub-modal-header p {
+            opacity: 0.88;
+            margin-top: 6px;
+            color: #fff;
+        }
+        .sub-modal-price-tag {
+            font-size: 40px;
+            font-weight: 800;
+            color: #fff;
+            margin-top: 10px;
+        }
+        .sub-modal-price-tag span {
+            font-size: 16px;
+            font-weight: 400;
+            opacity: 0.8;
+        }
+        .sub-modal-close {
+            position: absolute;
+            top: 18px;
+            right: 22px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #fff;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        .sub-modal-close:hover { background: rgba(255,255,255,0.35); }
+        .sub-modal-body {
+            display: grid;
+            grid-template-columns: 1fr 1.4fr;
+            gap: 0;
+        }
+        @media (max-width: 600px) {
+            .sub-modal-body { grid-template-columns: 1fr; }
+        }
+        .sub-modal-benefits {
+            padding: 28px 26px;
+            border-right: 1px solid var(--border);
+        }
+        .sub-modal-benefits h4 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-secondary);
+            margin-bottom: 18px;
+        }
+        .sub-modal-benefits ul {
+            list-style: none;
+        }
+        .sub-modal-benefits ul li {
+            padding: 9px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            color: var(--text-primary);
+        }
+        .sub-modal-benefits ul li .check {
+            color: var(--success);
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .sub-modal-form-area {
+            padding: 28px 30px;
+        }
+        .sub-modal-form-area h4 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            color: var(--text-primary);
+            background: var(--bg-light);
+            transition: var(--transition);
+            outline: none;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+        }
+        .card-icons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .card-icon {
+            padding: 4px 10px;
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+        .card-icon.active {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(99,102,241,0.07);
+        }
+        .btn-pay {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 4px;
+            letter-spacing: 0.02em;
+        }
+        .btn-pay:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+        .btn-pay:active { transform: translateY(0); }
+        .pay-secure-note {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 10px;
+        }
+        .pay-success {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 50px 30px;
+            text-align: center;
+        }
+        .pay-success.show { display: flex; }
+        .pay-success-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--success), #34d399);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        .pay-success h3 { font-size: 24px; margin-bottom: 10px; color: var(--text-primary); }
+        .pay-success p  { color: var(--text-secondary); max-width: 320px; }
+        /* dark mode modal */
+        body.dark-mode .sub-modal { background: #1e293b; }
+        body.dark-mode .sub-modal-benefits { border-right-color: #334155; }
+        body.dark-mode .sub-modal-benefits ul li { border-bottom-color: #334155; color: #e2e8f0; }
+        body.dark-mode .form-group input,
+        body.dark-mode .form-group select {
+            background: #0f172a;
+            border-color: #334155;
+            color: #e2e8f0;
+        }
+        body.dark-mode .card-icon { border-color: #334155; color: #94a3b8; }
+        body.dark-mode .card-icon.active { border-color: #818cf8; color: #a5b4fc; background: #1e1b4b; }
+    </style>
+    <script src="darkmode.js"></script>
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <nav>
+            <div class="logo">
+                <span>🎵</span>
+                <span class="logo-text">Music Studio Pro</span>
+            </div>
+            <ul>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#instruments">Instruments</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#footer">About</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle day/night mode" aria-label="Toggle dark mode">
+                    <div class="theme-toggle-sky" aria-hidden="true">
+                        <span class="icon sun">☀️</span>
+                        <span class="icon moon">🌙</span>
+                    </div>
+                    <span class="theme-toggle-label" id="themeLabel">Day Mode</span>
+                </button>
+                <button class="btn-primary" onclick="window.location.href='app.html'">Start Learning</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero fade-in">
+        <div class="hero-content">
+            <h1>Master Piano & Guitar with AI-Powered Learning</h1>
+            <p>
+                Learn at your own pace with the world's most intelligent music learning platform. 
+                Real-time feedback, personalized lessons, and expert guidance all in one place.
+            </p>
+            <div class="hero-buttons">
+                <button class="btn-primary" onclick="window.location.href='app.html'">
+                    🎹 Start Learning Now
+                </button>
+                <button class="btn-secondary" onclick="document.getElementById('features').scrollIntoView()">
+                    Learn More
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES SECTION -->
+    <section class="features-section" id="features">
+        <h2 class="section-title">Why Choose Music Studio Pro?</h2>
+        <div class="features-grid">
+            <div class="feature-card fade-in">
+                <div class="feature-icon">🤖</div>
+                <h3>AI-Powered Analysis</h3>
+                <p>Advanced pitch detection and autocorrelation algorithms provide real-time feedback on your performance.</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon">📊</div>
+                <h3>Detailed Analytics</h3>
+                <p>Track your progress with comprehensive metrics including pitch accuracy, timing, and rhythm consistency.</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon">🎼</div>
+                <h3>Structured Lessons</h3>
+                <p>Progressive learning path from beginner to advanced with carefully curated exercises.</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon">🎵</div>
+                <h3>Real-Time Visualization</h3>
+                <p>See your notes displayed in real-time with visual feedback on pitch and timing.</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon">💪</div>
+                <h3>Personalized Feedback</h3>
+                <p>AI generates actionable feedback to help you identify mistakes and improve faster.</p>
+            </div>
+            <div class="feature-card fade-in">
+                <div class="feature-icon">🏆</div>
+                <h3>Achievement System</h3>
+                <p>Earn badges and track milestones to stay motivated on your musical journey.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- INSTRUMENTS SECTION -->
+    <section class="instruments-section" id="instruments">
+        <h2 class="section-title">Choose Your Instrument</h2>
+        <div class="instruments-grid">
+            <div class="instrument-showcase" onclick="window.location.href='app.html?instrument=piano'">
+                <span class="instrument-emoji">🎹</span>
+                <h3>Piano</h3>
+                <p>Learn to play the piano with step-by-step lessons and visual note guidance.</p>
+            </div>
+            <div class="instrument-showcase" onclick="window.location.href='app.html?instrument=guitar'">
+                <span class="instrument-emoji">🎸</span>
+                <h3>Guitar</h3>
+                <p>Master guitar fundamentals with chord progressions and fretboard visualization.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATS SECTION -->
+    <section class="stats-section">
+        <div class="stats-container">
+            <div>
+                <div class="stat">100K+</div>
+                <div class="stat-label">Active Learners</div>
+            </div>
+            <div>
+                <div class="stat">50+</div>
+                <div class="stat-label">Lessons</div>
+            </div>
+            <div>
+                <div class="stat">10M+</div>
+                <div class="stat-label">Analytics Points</div>
+            </div>
+            <div>
+                <div class="stat">95%</div>
+                <div class="stat-label">Success Rate</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRICING SECTION -->
+    <section class="pricing-section" id="pricing">
+        <h2 class="section-title">Simple, Transparent Pricing</h2>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>Free Trial</h3>
+                <div class="price"><small>$</small>0<small>/mo</small></div>
+                <p>Perfect for getting started</p>
+                <ul class="features-list">
+                    <li>3 lessons per month</li>
+                    <li>Basic audio analysis</li>
+                    <li>Limited feedback</li>
+                    <li>Community support</li>
+                </ul>
+                <button class="btn-primary" onclick="window.location.href='app.html'">Get Started</button>
+            </div>
+
+            <div class="pricing-card featured">
+                <div class="badge">MOST POPULAR</div>
+                <h3>Pro</h3>
+                <div class="price"><small>$</small>9.99<small>/mo</small></div>
+                <p>For serious learners</p>
+                <ul class="features-list">
+                    <li>Unlimited lessons</li>
+                    <li>Advanced AI analysis</li>
+                    <li>Real-time feedback</li>
+                    <li>Priority support</li>
+                    <li>Progress tracking</li>
+                </ul>
+                <button class="btn-primary" onclick="openSubscriptionModal('Pro', 9.99)">Start Pro Trial</button>
+            </div>
+
+            <div class="pricing-card">
+                <h3>Premium+</h3>
+                <div class="price"><small>$</small>19.99<small>/mo</small></div>
+                <p>For professionals</p>
+                <ul class="features-list">
+                    <li>Everything in Pro</li>
+                    <li>1-on-1 coach access</li>
+                    <li>Personalized learning plan</li>
+                    <li>Advanced analytics</li>
+                    <li>Lifetime resources</li>
+                </ul>
+                <button class="btn-primary" onclick="openSubscriptionModal('Premium+', 19.99)">Start Premium</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SUBSCRIPTION MODAL -->
+    <div class="sub-modal-overlay" id="subModalOverlay" onclick="closeModalOnBackdrop(event)">
+        <div class="sub-modal" id="subModal" role="dialog" aria-modal="true" aria-labelledby="subModalTitle">
+            <!-- Header -->
+            <div class="sub-modal-header">
+                <button class="sub-modal-close" onclick="closeSubscriptionModal()" aria-label="Close">&#x2715;</button>
+                <h2 id="subModalTitle">Subscribe to <span id="modalPlanName"></span></h2>
+                <p id="modalPlanTagline"></p>
+                <div class="sub-modal-price-tag" id="modalPrice"></div>
+            </div>
+
+            <!-- Content: benefits + payment -->
+            <div class="sub-modal-body" id="subModalContent">
+                <!-- Benefits column -->
+                <div class="sub-modal-benefits">
+                    <h4>What you get</h4>
+                    <ul id="modalBenefitsList"></ul>
+                </div>
+
+                <!-- Payment column -->
+                <div class="sub-modal-form-area">
+                    <h4>Payment Details</h4>
+                    <div class="card-icons">
+                        <div class="card-icon active">VISA</div>
+                        <div class="card-icon active">MC</div>
+                        <div class="card-icon active">AMEX</div>
+                        <div class="card-icon">PayPal</div>
+                    </div>
+                    <form id="paymentForm" onsubmit="handlePayment(event)" novalidate>
+                        <div class="form-group">
+                            <label for="payEmail">Email Address</label>
+                            <input type="email" id="payEmail" placeholder="you@example.com" required autocomplete="email">
+                        </div>
+                        <div class="form-group">
+                            <label for="payName">Cardholder Name</label>
+                            <input type="text" id="payName" placeholder="Jane Smith" required autocomplete="cc-name">
+                        </div>
+                        <div class="form-group">
+                            <label for="payCard">Card Number</label>
+                            <input type="text" id="payCard" placeholder="1234 5678 9012 3456" maxlength="19" required autocomplete="cc-number" inputmode="numeric">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="payExpiry">Expiry Date</label>
+                                <input type="text" id="payExpiry" placeholder="MM / YY" maxlength="7" required autocomplete="cc-exp" inputmode="numeric">
+                            </div>
+                            <div class="form-group">
+                                <label for="payCVV">CVV</label>
+                                <input type="text" id="payCVV" placeholder="123" maxlength="4" required autocomplete="cc-csc" inputmode="numeric">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-pay" id="payBtn">Pay <span id="payBtnAmount"></span></button>
+                        <p class="pay-secure-note">🔒 Secured with 256-bit SSL encryption</p>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Success state -->
+            <div class="pay-success" id="paySuccess">
+                <div class="pay-success-icon">✓</div>
+                <h3>You're all set!</h3>
+                <p id="paySuccessMsg"></p>
+                <button class="btn-primary" style="margin-top:28px;" onclick="redirectToApp()">Start Learning</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer id="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>🎵 Music Studio Pro</h4>
+                <p>The most advanced music learning platform powered by AI and machine learning.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#">Lessons</a></li>
+                    <li><a href="#">Updates</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="#">Documentation</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#">Support</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Contact</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Music Studio Pro. All rights reserved. | Made with 💜 for music lovers</p>
+        </div>
+    </footer>
+    <!-- darkmode.js (loaded in <head>) handles all dark mode logic -->
+
+    <script>
+        const planData = {
+            'Pro': {
+                price: 9.99,
+                tagline: 'For serious learners',
+                benefits: [
+                    'Unlimited lessons every month',
+                    'Advanced AI audio analysis',
+                    'Real-time note & rhythm feedback',
+                    'Priority email support',
+                    'Progress tracking dashboard',
+                    'Access to all instruments'
+                ]
+            },
+            'Premium+': {
+                price: 19.99,
+                tagline: 'For professionals',
+                benefits: [
+                    'Everything included in Pro',
+                    '1-on-1 live coach sessions',
+                    'Personalized learning roadmap',
+                    'Advanced performance analytics',
+                    'Lifetime resource library access',
+                    'Early access to new features',
+                    'Dedicated account manager'
+                ]
+            }
+        };
+
+        function openSubscriptionModal(planName, price) {
+            const plan = planData[planName];
+            if (!plan) return;
+
+            document.getElementById('modalPlanName').textContent = planName;
+            document.getElementById('modalPlanTagline').textContent = plan.tagline;
+            document.getElementById('modalPrice').innerHTML =
+                '<small>$</small>' + plan.price.toFixed(2) + '<span> / month</span>';
+
+            const list = document.getElementById('modalBenefitsList');
+            list.innerHTML = plan.benefits
+                .map(b => `<li><span class="check">&#10003;</span>${b}</li>`)
+                .join('');
+
+            // Reset form
+            document.getElementById('paymentForm').reset();
+            document.getElementById('paymentForm').style.display = '';
+            document.getElementById('subModalContent').style.display = '';
+            document.getElementById('paySuccess').classList.remove('show');
+            const payBtn = document.getElementById('payBtn');
+            payBtn.innerHTML = 'Pay <span id="payBtnAmount">$' + plan.price.toFixed(2) + '</span>';
+            payBtn.disabled = false;
+
+            document.getElementById('subModalOverlay').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSubscriptionModal() {
+            document.getElementById('subModalOverlay').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        function closeModalOnBackdrop(e) {
+            if (e.target === document.getElementById('subModalOverlay')) {
+                closeSubscriptionModal();
+            }
+        }
+
+        // Card number formatting: groups of 4
+        document.addEventListener('DOMContentLoaded', function () {
+            const cardInput = document.getElementById('payCard');
+            cardInput.addEventListener('input', function () {
+                let v = this.value.replace(/\D/g, '').substring(0, 16);
+                this.value = v.replace(/(\d{4})(?=\d)/g, '$1 ');
+            });
+
+            const expiryInput = document.getElementById('payExpiry');
+            expiryInput.addEventListener('input', function () {
+                let v = this.value.replace(/\D/g, '').substring(0, 4);
+                if (v.length >= 3) v = v.substring(0, 2) + ' / ' + v.substring(2);
+                this.value = v;
+            });
+
+            const cvvInput = document.getElementById('payCVV');
+            cvvInput.addEventListener('input', function () {
+                this.value = this.value.replace(/\D/g, '').substring(0, 4);
+            });
+        });
+
+        // Keyboard: Escape closes modal
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeSubscriptionModal();
+        });
+
+        function handlePayment(e) {
+            e.preventDefault();
+
+            const email  = document.getElementById('payEmail').value.trim();
+            const name   = document.getElementById('payName').value.trim();
+            const card   = document.getElementById('payCard').value.replace(/\s/g, '');
+            const expiry = document.getElementById('payExpiry').value.trim();
+            const cvv    = document.getElementById('payCVV').value.trim();
+
+            // Basic validation
+            if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+                showInputError('payEmail', 'Please enter a valid email address.');
+                return;
+            }
+            if (!name) { showInputError('payName', 'Please enter the cardholder name.'); return; }
+            if (!/^\d{13,16}$/.test(card)) { showInputError('payCard', 'Please enter a valid card number.'); return; }
+            if (!/^(0[1-9]|1[0-2])\s*\/\s*\d{2}$/.test(expiry)) { showInputError('payExpiry', 'Please enter a valid expiry (MM / YY).'); return; }
+            if (!/^\d{3,4}$/.test(cvv)) { showInputError('payCVV', 'Please enter a valid CVV.'); return; }
+
+            const btn = document.getElementById('payBtn');
+            btn.textContent = 'Processing...';
+            btn.disabled = true;
+
+            // Simulate payment processing
+            setTimeout(function () {
+                const plan = document.getElementById('modalPlanName').textContent;
+                document.getElementById('subModalContent').style.display = 'none';
+                document.getElementById('paySuccessMsg').textContent =
+                    'Your ' + plan + ' subscription is now active. Check ' + email + ' for your receipt.';
+                document.getElementById('paySuccess').classList.add('show');
+            }, 1800);
+        }
+
+        function showInputError(id, msg) {
+            const el = document.getElementById(id);
+            el.style.borderColor = 'var(--error)';
+            el.focus();
+            // Remove red border after user types again
+            el.addEventListener('input', function onInput() {
+                el.style.borderColor = '';
+                el.removeEventListener('input', onInput);
+            });
+            // Brief tooltip-like shake
+            el.style.animation = 'none';
+            void el.offsetWidth;
+            el.style.animation = 'shake 0.3s ease';
+        }
+
+        function redirectToApp() {
+            closeSubscriptionModal();
+            window.location.href = 'app.html';
+        }
+    </script>
+</body>
+</html>

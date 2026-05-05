@@ -1,0 +1,48 @@
+# Python virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# ML model outputs (large binary files)
+ml/outputs/*.joblib
+ml/outputs/*.onnx
+ml/outputs/*.keras
+ml/outputs/features.csv
+
+# Dataset audio/MIDI files (large, not needed in repo)
+Piano\ Dataset\ 2/piano_triads/
+"Piano Dataset 2"/piano_triads/
+Piano Dataset 2/piano_triads/
+*.zip
+Piano/split_midi/
+Piano/split_spec/
+**/*.mid
+Piano Dataset 2/triads.csv
+
+# Keep scaler_params.json and training_results.txt (small text files)
+!ml/outputs/scaler_params.json
+!ml/outputs/training_results.txt
+!ml/outputs/chord_classifier.json
+
+# Logs
+ml/extraction_log.txt
+ml/training_log.txt
+
+# Node / OS
+node_modules/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# API keys — never commit these
+Gemini API Key.txt
+
+# VS Code
+.vscode/

@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Music Studio Pro - Learn Piano & Guitar with AI">
+    <title>Music Studio Pro - Interactive Music Learning</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>🎵</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-light: #f9fafb;
+            --bg-white: #ffffff;
+            --border: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            color: var(--text-primary);
+            background: var(--bg-light);
+            line-height: 1.6;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* HEADER */
+        .app-header {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .app-logo {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            cursor: pointer;
+        }
+
+        .breadcrumb {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* PROGRESS BAR */
+        .progress-section {
+            margin-bottom: 30px;
+        }
+
+        .progress-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        /* STEP CONTAINER */
+        .step-container {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .step-container.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* STEP 1: INSTRUMENT SELECTION */
+        .instrument-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .instrument-card {
+            background: var(--bg-white);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 40px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .instrument-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .instrument-card:hover::before {
+            left: 100%;
+        }
+
+        .instrument-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-5px);
+        }
+
+        .instrument-card.selected {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1));
+            box-shadow: var(--shadow-lg);
+        }
+
+        .instrument-emoji {
+            font-size: 80px;
+            margin-bottom: 20px;
+            display: block;
+            transition: var(--transition);
+        }
+
+        .instrument-card:hover .instrument-emoji {
+            transform: scale(1.2) rotate(5deg);
+        }
+
+        .instrument-card h3 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .instrument-card p {
+            color: var(--text-secondary);
+        }
+
+        /* STEP 2: SKILL LEVEL SELECTION */
+        .skill-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .skill-card {
+            background: var(--bg-white);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .skill-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .skill-card.selected {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1));
+        }
+
+        .skill-badge {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .skill-beginner {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .skill-intermediate {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .skill-advanced {
+            background: linear-gradient(135deg, #7c3aed, #5b21b6);
+            color: white;
+        }
+
+        /* RETURNING PLAYER SECTION */
+        .returning-player-section {
+            margin-top: 36px;
+        }
+
+        .returning-player-divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .returning-player-divider::before,
+        .returning-player-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .returning-player-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(6, 182, 212, 0.06));
+            border: 2px dashed var(--primary);
+            border-radius: 16px;
+            padding: 24px 28px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .returning-player-card:hover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(6, 182, 212, 0.12));
+            border-style: solid;
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-3px);
+        }
+
+        .returning-player-icon {
+            font-size: 42px;
+            flex-shrink: 0;
+        }
+
+        .returning-player-text {
+            flex: 1;
+        }
+
+        .returning-player-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .returning-player-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .returning-player-arrow {
+            font-size: 24px;
+            color: var(--primary);
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        /* AI ASSESSMENT MODAL */
+        .assessment-modal-content {
+            max-width: 680px;
+            width: 100%;
+        }
+
+        .assessment-phase-indicator {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 28px;
+            justify-content: center;
+        }
+
+        .phase-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: var(--transition);
+        }
+
+        .phase-dot.active {
+            background: var(--primary);
+            transform: scale(1.3);
+        }
+
+        .phase-dot.done {
+            background: var(--success);
+        }
+
+        .assessment-challenge-box {
+            background: linear-gradient(135deg, #1f2937, #111827);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .assessment-notes-display {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 16px 0;
+        }
+
+        .assessment-note-pill {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: monospace;
+        }
+
+        .assessment-note-pill.active {
+            animation: notePulse 0.5s ease-in-out;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.7);
+        }
+
+        @keyframes notePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .assessment-result-card {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .assessment-result-level {
+            font-size: 48px;
+            font-weight: 800;
+            margin: 16px 0 8px;
+        }
+
+        .assessment-result-level.beginner { color: #10b981; }
+        .assessment-result-level.intermediate { color: #f59e0b; }
+        .assessment-result-level.advanced { color: #7c3aed; }
+
+        .assessment-score-bar-wrap {
+            background: var(--border);
+            border-radius: 8px;
+            height: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .assessment-score-bar-fill {
+            height: 100%;
+            border-radius: 8px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transition: width 1s ease;
+        }
+
+        .assessment-phase-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .assessment-challenge-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .assessment-challenge-desc {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+
+        .assessment-mic-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+
+        .assessment-mic-dot {
+            width: 8px;
+            height: 8px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+
+        .ai-thinking {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .ai-thinking-dots span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .ai-thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .ai-thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .skill-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .skill-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .skill-card.skill-completed {
+            border-color: #10b981;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(5, 150, 105, 0.08));
+        }
+
+        .skill-completed-badge {
+            margin-top: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        /* STEP 3: LESSON SELECTION */
+        .lessons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 24px;
+        }
+
+        .lesson-card {
+            background: var(--bg-white);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .lesson-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-5px);
+        }
+
+        .lesson-card.locked {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .lesson-card.locked:hover {
+            transform: none;
+        }
+
+        .lesson-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .lesson-number {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .lesson-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 10px 0;
+            color: var(--text-primary);
+        }
+
+        .lesson-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+
+        .lesson-duration {
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .lock-icon {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 20px;
+        }
+
+        .lesson-card.selected {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1));
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1), var(--shadow-lg);
+            transform: scale(1.02);
+        }
+
+        .lesson-card.completed {
+            border-color: #10b981;
+        }
+
+        .lesson-completed-badge {
+            margin-top: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* STEP 4: PRACTICE INTERFACE */
+        .practice-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .practice-panel {
+            background: var(--bg-white);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* VISUALIZER */
+        .visualizer-container {
+            background: linear-gradient(135deg, #1f2937, #111827);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #visualizer {
+            width: 100%;
+            height: 200px;
+            border-radius: 8px;
+        }
+
+        /* PIANO KEYBOARD */
+        .keyboard-container {
+            display: flex;
+            gap: 4px;
+            margin: 20px 0;
+            overflow-x: auto;
+            padding: 10px;
+            background: var(--bg-light);
+            border-radius: 8px;
+        }
+
+        .piano-key {
+            flex-shrink: 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: var(--transition);
+            font-size: 11px;
+            font-weight: 600;
+            user-select: none;
+        }
+
+        .piano-key.white {
+            width: 45px;
+            height: 140px;
+            background: white;
+            border: 2px solid #ccc;
+            color: var(--text-secondary);
+        }
+
+        .piano-key.black {
+            width: 30px;
+            height: 90px;
+            background: #1f2937;
+            border: 2px solid #000;
+            color: white;
+            margin-left: -18px;
+            margin-right: -18px;
+            z-index: 10;
+        }
+
+        .piano-key:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .piano-key.active {
+            background: var(--primary);
+            border-color: var(--primary-dark);
+            color: white;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+        }
+
+        /* CHORD VISUALIZER STYLES */
+        .chord-viz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .chord-viz-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .chord-display {
+            text-align: right;
+        }
+
+        .chord-name {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+            margin-bottom: 4px;
+        }
+
+        .notes-display {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .piano-container {
+            background: linear-gradient(135deg, #f5f5f5, #e8e8e8);
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        .piano-keyboard {
+            display: flex;
+            gap: 2px;
+            padding: 10px 0;
+            position: relative;
+        }
+
+        .white-key {
+            width: 50px;
+            height: 160px;
+            background: white;
+            border: 2px solid #999;
+            border-radius: 4px 4px 8px 8px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .black-key {
+            width: 32px;
+            height: 100px;
+            background: #1a1a1a;
+            border: 2px solid #000;
+            border-radius: 3px 3px 6px 6px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            color: white;
+            font-size: 9px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            margin-left: -26px;
+            margin-right: -26px;
+            z-index: 10;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .piano-key.active,
+        .white-key.active,
+        .black-key.active {
+            background: var(--note-color, var(--primary));
+            box-shadow: 0 0 20px var(--note-color, var(--primary)), 0 4px 8px rgba(0, 0, 0, 0.2);
+            transform: scale(0.98);
+            color: white;
+        }
+
+        .guitar-container {
+            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+            border-radius: 12px;
+            padding: 30px;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            overflow-x: auto;
+        }
+
+        .guitar-fretboard {
+            flex: 1;
+            min-width: min-content;
+        }
+
+        .guitar-string-row {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .guitar-string-label {
+            width: 40px;
+            text-align: center;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .guitar-fret {
+            width: 45px;
+            height: 30px;
+            background: #444;
+            border: 1px solid #666;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .guitar-fret.open-string {
+            background: #555;
+            border-color: #777;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .guitar-fret.fret-marker {
+            background: #555;
+            border-color: #666;
+        }
+
+        .guitar-fret.active {
+            background: var(--note-color, var(--primary));
+            box-shadow: 0 0 15px var(--note-color, var(--primary)), inset 0 1px 3px rgba(0, 0, 0, 0.5);
+            transform: scale(1.05);
+            color: white;
+        }
+
+        /* CONTROLS */
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* RECORDING TIMER */
+        .timer {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+            padding: 15px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* DETECTED NOTES */
+        .notes-display {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .note-badge {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .note-frequency {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        /* FEEDBACK PANEL */
+        .feedback-panel {
+            background: linear-gradient(135deg, rgba(248, 113, 113, 0.1), rgba(251, 191, 36, 0.1));
+            border: 2px solid #fbbf24;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .feedback-title {
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feedback-item {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(251, 191, 36, 0.2);
+            last-child {
+                border-bottom: none;
+            }
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 500px;
+            margin: 20px;
+            box-shadow: var(--shadow-xl);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .modal-description {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        /* STATISTICS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1));
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1024px) {
+            .practice-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .practice-panel {
+                padding: 20px;
+            }
+
+            .instrument-card,
+            .skill-card {
+                padding: 20px;
+                min-height: auto;
+            }
+
+            .instrument-emoji {
+                font-size: 60px;
+            }
+
+            .keyboard-container {
+                gap: 2px;
+            }
+
+            .piano-key.white {
+                width: 35px;
+                height: 110px;
+            }
+
+            .piano-key.black {
+                width: 24px;
+                height: 70px;
+                margin-left: -14px;
+                margin-right: -14px;
+            }
+        }
+
+        /* ── DARK MODE OVERRIDES ── */
+        body.dark-mode {
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --bg-light: #111827;
+            --bg-white: #1f2937;
+            --border: #374151;
+            --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.4);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.5);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5);
+            color: var(--text-primary);
+            background: var(--bg-light);
+        }
+        body.dark-mode .modal-content,
+        body.dark-mode .assessment-card { background: #1f2937; color: #f3f4f6; border-color: #374151; }
+        body.dark-mode .stat-card       { background: #1f2937; border-color: #374151; }
+        body.dark-mode .skill-card      { background: #1f2937; border-color: #374151; }
+        body.dark-mode .lesson-card     { background: #1f2937; border-color: #374151; }
+        body.dark-mode .lesson-card h3,
+        body.dark-mode .lesson-card p   { color: var(--text-primary); }
+        body.dark-mode .reference-panel { background: #1f2937; border-color: #374151; }
+        body.dark-mode .settings-modal  { background: #1f2937; }
+        body.dark-mode input[type="checkbox"] { accent-color: var(--primary); }
+
+        /* app-header theme toggle button */
+        .app-theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: #f3f4f6;
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        .app-theme-toggle:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: #ede9fe;
+        }
+        body.dark-mode .app-theme-toggle {
+            background: #374151;
+            border-color: #4b5563;
+            color: #d1d5db;
+        }
+        body.dark-mode .app-theme-toggle:hover {
+            border-color: #818cf8;
+            color: #a5b4fc;
+            background: #312e81;
+        }
+        .app-theme-toggle-sky {
+            position: relative;
+            width: 20px;
+            height: 20px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .app-theme-toggle-sky .icon {
+            position: absolute;
+            left: 0;
+            font-size: 16px;
+            line-height: 20px;
+            width: 20px;
+            text-align: center;
+            transition: transform 0.55s cubic-bezier(0.4,0,0.2,1),
+                        opacity  0.55s cubic-bezier(0.4,0,0.2,1);
+        }
+        .app-theme-toggle-sky .sun  { transform: translateY(0);    opacity: 1; }
+        .app-theme-toggle-sky .moon { transform: translateY(100%); opacity: 0; }
+        body.dark-mode .app-theme-toggle-sky .sun  { transform: translateY(100%); opacity: 0; }
+        body.dark-mode .app-theme-toggle-sky .moon { transform: translateY(0);    opacity: 1; }
+        /* header right-side group */
+        .header-right { display: flex; align-items: center; gap: 10px; }
+    </style>
+    <script src="darkmode.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- HEADER -->
+        <div class="app-header">
+            <div class="header-left">
+                <div class="app-logo" onclick="window.location.href='index.html'" title="Back to home">🎵 Music Studio Pro</div>
+                <div class="breadcrumb" id="breadcrumb">Select an instrument</div>
+            </div>
+            <div class="header-right">
+                <button class="app-theme-toggle" onclick="toggleTheme()" title="Toggle day/night mode" aria-label="Toggle dark mode">
+                    <div class="app-theme-toggle-sky" aria-hidden="true">
+                        <span class="icon sun">☀️</span>
+                        <span class="icon moon">🌙</span>
+                    </div>
+                    <span id="themeLabel">Day Mode</span>
+                </button>
+                <button class="btn btn-secondary" onclick="toggleSettings()" title="Settings">⚙️ Settings</button>
+            </div>
+        </div>
+
+        <!-- PROGRESS -->
+        <div class="progress-section">
+            <div class="progress-label" id="progressLabel">Progress: Step 1 of 4</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 25%;"></div>
+            </div>
+        </div>
+
+        <!-- STEP 1: INSTRUMENT SELECTION -->
+        <div class="step-container active" id="step1">
+            <h2 style="margin-bottom: 30px; font-size: 28px; font-weight: 700;">Choose Your Instrument</h2>
+            <div class="instrument-selection">
+                <div class="instrument-card" onclick="selectInstrument('piano', this)">
+                    <span class="instrument-emoji">🎹</span>
+                    <h3>Piano</h3>
+                    <p>Learn piano with visual feedback, note detection, and progressive lessons.</p>
+                </div>
+                <div class="instrument-card" onclick="selectInstrument('guitar', this)">
+                    <span class="instrument-emoji">🎸</span>
+                    <h3>Guitar</h3>
+                    <p>Master guitar techniques with chord progressions and fretboard visualization.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: SKILL LEVEL -->
+        <div class="step-container" id="step2">
+            <h2 style="margin-bottom: 8px; font-size: 28px; font-weight: 700;">What's Your Skill Level?</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 30px;">New here? Pick a level below. Already played before? Let the AI figure it out for you.</p>
+            <div class="skill-grid">
+                <div class="skill-card" onclick="selectSkillLevel('beginner', this)">
+                    <div class="skill-badge skill-beginner">Beginner</div>
+                    <h3>Getting Started</h3>
+                    <p class="skill-description">New to music or this instrument. Learn the basics from scratch.</p>
+                </div>
+                <div class="skill-card" onclick="selectSkillLevel('intermediate', this)">
+                    <div class="skill-badge skill-intermediate">Intermediate</div>
+                    <h3>Making Progress</h3>
+                    <p class="skill-description">Some experience and fundamentals under your belt.</p>
+                </div>
+                <div class="skill-card" onclick="selectSkillLevel('advanced', this)">
+                    <div class="skill-badge skill-advanced">Pro</div>
+                    <h3>Pro Level</h3>
+                    <p class="skill-description">Solid skills ready for advanced challenges and refinement.</p>
+                </div>
+            </div>
+
+            <!-- RETURNING PLAYER ASSESSMENT BUTTON -->
+            <div class="returning-player-section">
+                <div class="returning-player-divider">
+                    <span>or</span>
+                </div>
+                <div class="returning-player-card" onclick="startLevelAssessment()">
+                    <div class="returning-player-icon">🎯</div>
+                    <div class="returning-player-text">
+                        <div class="returning-player-title">Returning Player? Discover Your Level</div>
+                        <div class="returning-player-desc">Play a short musical challenge and let our AI agent assess your skill level automatically.</div>
+                    </div>
+                    <div class="returning-player-arrow">→</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: LESSON SELECTION -->
+        <div class="step-container" id="step3">
+            <h2 style="margin-bottom: 30px; font-size: 28px; font-weight: 700;">Select a Lesson</h2>
+            <div class="lessons-grid" id="lessonsGrid">
+                <!-- Lessons will be generated dynamically -->
+            </div>
+            
+            <div class="controls" style="margin-top: 40px; justify-content: space-between; gap: 12px;">
+                <button class="btn btn-secondary" onclick="previousStep()">← Back</button>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-success" id="practiceBtn" onclick="startPracticeLesson()" style="display: none;">
+                        🎤 Start Practice
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 4: PRACTICE INTERFACE -->
+        <div class="step-container" id="step4">
+            <h2 style="margin-bottom: 30px; font-size: 28px; font-weight: 700;" id="practiceTitle">Practice Lesson</h2>
+            
+            <div class="practice-container">
+                <!-- LEFT PANEL: REFERENCE -->
+                <div class="practice-panel">
+                    <div class="panel-title">📋 Reference</div>
+                    <div id="referenceContent">
+                        <!-- Lesson reference material -->
+                    </div>
+                </div>
+
+                <!-- RIGHT PANEL: PRACTICE & ANALYSIS -->
+                <div class="practice-panel">
+                    <div class="panel-title">🎤 Your Performance</div>
+                    
+                    <div class="visualizer-container">
+                        <canvas id="visualizer"></canvas>
+                    </div>
+
+                    <div class="timer" id="timer" style="display: none;">00:00</div>
+
+                    <div class="controls">
+                        <button class="btn btn-primary" id="recordBtn" onclick="startRecording()">
+                            🎤 Start Recording
+                        </button>
+                        <button class="btn btn-danger" id="stopBtn" onclick="stopRecording()" style="display: none;">
+                            ⏹ Stop
+                        </button>
+                    </div>
+
+                    <!-- CHORD VISUALIZER -->
+                    <div id="chordVisualizerContainer" style="margin-top: 20px; padding: 20px; background: #f5f5f5; border-radius: 12px; display: none;">
+                        <!-- Piano or Guitar chord visualizer will be rendered here -->
+                    </div>
+                    <button class="btn btn-secondary" id="replayAnimBtn" onclick="replayExpectedAnimation()" style="display: none; margin-top: 10px; font-size: 13px; padding: 8px 16px;">
+                        🔄 Show Me Again
+                    </button>
+
+                    <div id="analysisResults" style="margin-top: 20px;"></div>
+
+                    <!-- TIMING GRAPH: Notes over Time -->
+                    <div id="timingGraphContainer" style="display: none; margin-top: 20px; padding: 20px; background: #1a1a2e; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+                        <div style="font-size: 14px; font-weight: 700; color: #a5b4fc; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">📊 Note Timing Graph</div>
+                        <canvas id="timingGraph" style="width: 100%; height: 260px; border-radius: 8px;"></canvas>
+                        <div id="timingGraphLegend" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 4px 0;"></div>
+                    </div>
+
+                    <div class="stats-grid" id="statsGrid" style="display: none;">
+                        <div class="stat-card">
+                            <div class="stat-value" id="pitchAccuracy">-</div>
+                            <div class="stat-label">Pitch Accuracy</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="timing">-</div>
+                            <div class="stat-label">Timing</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="rhythm">-</div>
+                            <div class="stat-label">Rhythm</div>
+                        </div>
+                    </div>
+
+                    <div class="controls" style="margin-top: 20px;">
+                        <button class="btn btn-secondary" onclick="previousStep()">← Back</button>
+                        <button class="btn btn-success" onclick="completeLesson()" id="completeBtn" style="display: none;">
+                            ✓ Complete Lesson
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI LEVEL ASSESSMENT MODAL -->
+    <div class="modal" id="assessmentModal">
+        <div class="modal-content assessment-modal-content">
+            <!-- PHASE INDICATOR -->
+            <div class="assessment-phase-indicator" id="assessmentPhaseIndicator">
+                <div class="phase-dot active" id="phaseDot1"></div>
+                <div class="phase-dot" id="phaseDot2"></div>
+                <div class="phase-dot" id="phaseDot3"></div>
+            </div>
+
+            <div id="assessmentBody">
+                <!-- Dynamically populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-title">⚙️ Settings</div>
+            <div class="modal-description">
+                Customize your learning experience
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <input type="checkbox" id="microphonePermission" checked>
+                    Required microphone permission
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <input type="checkbox" id="soundEnabled" checked>
+                    Enable sound feedback
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <input type="checkbox" id="notificationsEnabled" checked>
+                    Enable notifications
+                </label>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeSettings()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="utilities.js"></script>
+    <script src="audioAnalyzer.js"></script>
+    <script src="chord-visualizer.js"></script>
+    <script src="ml/chord_classifier_inference.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
