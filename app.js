@@ -661,17 +661,17 @@ class AudioAnalysisEngine {
         // MediaRecorder always encodes WebM/Opus internally — label alone doesn't re-encode.
         // Decode with AudioContext (browser handles WebM natively), then write a real WAV.
         const rawBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
-        const audioUrl = URL.createObjectURL(rawBlob);
 
         let wavBlob = rawBlob;
         try {
             const arrayBuf = await rawBlob.arrayBuffer();
-            const tmpCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+            const tmpCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 22050 });
             const decoded = await tmpCtx.decodeAudioData(arrayBuf);
             tmpCtx.close();
             wavBlob = this._encodeWAV(decoded.getChannelData(0), decoded.sampleRate);
+            console.log('[audio] WAV encoded:', wavBlob.size, 'bytes at', decoded.sampleRate, 'Hz, duration', decoded.duration.toFixed(2), 's');
         } catch (decErr) {
-            console.warn('WAV re-encode failed, sending raw blob:', decErr.message);
+            console.warn('[audio] WAV re-encode failed, sending raw blob:', decErr.message);
         }
 
         // Try backend first; fall back to local autocorrelation
@@ -679,13 +679,23 @@ class AudioAnalysisEngine {
         try {
             const formData = new FormData();
             formData.append('audio', wavBlob, 'recording.wav');
+
+            // Use AbortController for broad browser compatibility
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 45000);
+
+            console.log('[audio] Sending', wavBlob.size, 'bytes to /analyze …');
             const res = await fetch('https://research-project-8jdj.onrender.com/analyze', {
                 method: 'POST',
                 body: formData,
-                signal: AbortSignal.timeout(45000)
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
+            console.log('[audio] /analyze responded:', res.status);
+
             if (res.ok) {
                 const data = await res.json();
+                console.log('[audio] backend notes:', data.notes);
                 // Map backend note format ("C_4") to app.js format ({name, octave, full})
                 const nameMap = { Cs: 'C#', Eb: 'D#', Fs: 'F#', Gs: 'G#', Bb: 'A#' };
                 const mapped = (data.notes || []).map(item => {
@@ -706,23 +716,24 @@ class AudioAnalysisEngine {
                     if (this._onAnalysisDone) this._onAnalysisDone([...this.detectedNotes]);
                     backendSuccess = true;
                 } else {
-                    console.warn('Backend returned 0 notes — using local fallback');
+                    console.warn('[audio] Backend returned 0 notes — using local fallback');
                 }
             } else {
-                console.warn('Backend returned status', res.status, '— using local fallback');
+                const errText = await res.text().catch(() => '');
+                console.warn('[audio] Backend error', res.status, errText);
             }
         } catch (e) {
-            console.warn('Backend unavailable, falling back to autocorrelation:', e.message);
+            console.warn('[audio] Fetch failed:', e.message, '— using local fallback');
         }
 
         if (!backendSuccess) {
-            // Fallback: local frequency analysis
+            // Fallback: local frequency analysis (use the WAV blob, not raw WebM)
             const fileReader = new FileReader();
             fileReader.onload = (e) => {
                 const arrayBuffer = e.target.result;
                 this.analyzeAudio(arrayBuffer);
             };
-            fileReader.readAsArrayBuffer(rawBlob);
+            fileReader.readAsArrayBuffer(wavBlob);
         }
     }
 
