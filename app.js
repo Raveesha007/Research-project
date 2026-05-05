@@ -679,7 +679,7 @@ class AudioAnalysisEngine {
         try {
             const formData = new FormData();
             formData.append('audio', wavBlob, 'recording.wav');
-            const res = await fetch('http://localhost:5001/analyze', {
+            const res = await fetch('https://research-project-8jdj.onrender.com/analyze', {
                 method: 'POST',
                 body: formData,
                 signal: AbortSignal.timeout(15000)
@@ -2441,7 +2441,7 @@ async function beginAssessmentPhase(phaseNum) {
             try {
                 const formData = new FormData();
                 formData.append('audio', blob, 'recording.webm');
-                const res = await fetch('http://localhost:5001/analyze', {
+                const res = await fetch('https://research-project-8jdj.onrender.com/analyze', {
                     method: 'POST',
                     body: formData,
                     signal: AbortSignal.timeout(8000)

@@ -6,7 +6,9 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:*", "http://127.0.0.1:*", "null"])
+CORS(app, origins=["http://localhost:*", "http://127.0.0.1:*", "null",
+                   "https://music-studio-pro-56678.web.app",
+                   "https://research-project-8jdj.onrender.com"])
 
 # ── Keras model disabled — using pyin only ──────────────────────────────────────────
 # MODEL_PATH = os.path.join(os.path.dirname(__file__), 'ml', 'outputs', 'piano_detector_final.keras')
