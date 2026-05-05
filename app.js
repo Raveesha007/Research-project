@@ -674,56 +674,58 @@ class AudioAnalysisEngine {
             console.warn('[audio] WAV re-encode failed, sending raw blob:', decErr.message);
         }
 
-        // Try backend first; fall back to local autocorrelation
+        // Try backend (with one retry for Render cold-start wake-up)
         let backendSuccess = false;
-        try {
+        const tryBackend = async () => {
             const formData = new FormData();
             formData.append('audio', wavBlob, 'recording.wav');
-
-            // Use AbortController for broad browser compatibility
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort('timeout'), 90000);
-
-            console.log('[audio] Sending', wavBlob.size, 'bytes to /analyze …');
-            const res = await fetch('/analyze', {
-                method: 'POST',
-                body: formData,
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-            console.log('[audio] /analyze responded:', res.status);
-
-            if (res.ok) {
-                const data = await res.json();
-                console.log('[audio] backend notes:', data.notes);
-                // Map backend note format ("C_4") to app.js format ({name, octave, full})
-                const nameMap = { Cs: 'C#', Eb: 'D#', Fs: 'F#', Gs: 'G#', Bb: 'A#' };
-                const mapped = (data.notes || []).map(item => {
-                    const parts = item.note.split('_');
-                    const rawName = parts[0];
-                    const octave = parseInt(parts[1], 10);
-                    const name = nameMap[rawName] || rawName;
-                    return {
-                        frequency: item.frequency,
-                        confidence: item.confidence,
-                        note: { name, octave, full: name + octave },
-                        timestamp: 0
-                    };
+            const timeoutId = setTimeout(() => controller.abort(), 90000);
+            try {
+                console.log('[audio] Sending', wavBlob.size, 'bytes to /analyze …');
+                const res = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData,
+                    signal: controller.signal
                 });
-                if (mapped.length > 0) {
-                    this.detectedNotes = mapped;
-                    this.generateAnalysis();
-                    if (this._onAnalysisDone) this._onAnalysisDone([...this.detectedNotes]);
-                    backendSuccess = true;
-                } else {
-                    console.warn('[audio] Backend returned 0 notes — using local fallback');
+                clearTimeout(timeoutId);
+                console.log('[audio] /analyze responded:', res.status);
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log('[audio] backend notes:', data.notes);
+                    const nameMap = { Cs: 'C#', Eb: 'D#', Fs: 'F#', Gs: 'G#', Bb: 'A#' };
+                    const mapped = (data.notes || []).map(item => {
+                        const parts = item.note.split('_');
+                        const rawName = parts[0];
+                        const octave = parseInt(parts[1], 10);
+                        const name = nameMap[rawName] || rawName;
+                        return {
+                            frequency: item.frequency,
+                            confidence: item.confidence,
+                            note: { name, octave, full: name + octave },
+                            timestamp: 0
+                        };
+                    });
+                    if (mapped.length > 0) {
+                        this.detectedNotes = mapped;
+                        this.generateAnalysis();
+                        if (this._onAnalysisDone) this._onAnalysisDone([...this.detectedNotes]);
+                        return true;
+                    }
                 }
-            } else {
-                const errText = await res.text().catch(() => '');
-                console.warn('[audio] Backend error', res.status, errText);
+            } catch (e) {
+                clearTimeout(timeoutId);
+                console.warn('[audio] Fetch attempt failed:', e.message || e);
             }
-        } catch (e) {
-            console.warn('[audio] Fetch failed:', e.message, '(reason:', e.name, ') — using local fallback');
+            return false;
+        };
+
+        backendSuccess = await tryBackend();
+        if (!backendSuccess) {
+            // Render free tier may be waking up — wait 4s and retry once
+            console.log('[audio] Retrying backend in 4s (cold-start wake-up)…');
+            await new Promise(r => setTimeout(r, 4000));
+            backendSuccess = await tryBackend();
         }
 
         if (!backendSuccess) {
@@ -784,8 +786,8 @@ class AudioAnalysisEngine {
         const windowSize = 4096;
         const hopSize = 4096; // Non-overlapping windows to reduce over-detection
         const totalSamples = buffer.length;
-        const MIN_CONFIDENCE = 55; // Lowered from 75 — piano mic recordings are often quieter
-        const MIN_HOLD_WINDOWS = 2; // Lowered from 3 — allow notes held for ~185ms (2×4096/44100)
+        const MIN_CONFIDENCE = 30; // Low threshold — piano mic recordings vary widely
+        const MIN_HOLD_WINDOWS = 1; // Allow single-window notes (~185ms)
 
         // Phase 1: Detect raw notes per window
         const rawDetections = [];
