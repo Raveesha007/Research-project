@@ -682,7 +682,7 @@ class AudioAnalysisEngine {
 
             // Use AbortController for broad browser compatibility
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 45000);
+            const timeoutId = setTimeout(() => controller.abort('timeout'), 90000);
 
             console.log('[audio] Sending', wavBlob.size, 'bytes to /analyze …');
             const res = await fetch('/analyze', {
@@ -723,7 +723,7 @@ class AudioAnalysisEngine {
                 console.warn('[audio] Backend error', res.status, errText);
             }
         } catch (e) {
-            console.warn('[audio] Fetch failed:', e.message, '— using local fallback');
+            console.warn('[audio] Fetch failed:', e.message, '(reason:', e.name, ') — using local fallback');
         }
 
         if (!backendSuccess) {
